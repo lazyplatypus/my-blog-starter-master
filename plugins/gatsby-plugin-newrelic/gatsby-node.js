@@ -14,13 +14,26 @@ const winston = require('winston');
 
 const logger = winston.createLogger({
   transports: [new NewrelicLogs({
-    licenseKey: process.env.NR_LICENCE,
+    licenseKey: constants.NR_LICENCE,
     apiUrl: 'https://log-api.newrelic.com'
   }), new NewrelicWinston()],
   format: winston.format.combine(winston.format.label({
     serviceName: 'GatsbyWinston'
   }), newrelicFormatter())
 });
+const originalStdoutWrite = process.stdout.write.bind(process.stdout);
+const REPLACE_SUBSTRINGS = ['[34m', '[39m', '[2K[1A[2K[G', '[32m'];
+
+process.stdout.write = (chunk, encoding, callback) => {
+  if (typeof chunk === 'string') {
+    logger.log({
+      level: 'info',
+      message: chunk
+    });
+  }
+
+  return originalStdoutWrite(chunk, encoding, callback);
+};
 
 var _process$env$BENCHMAR;
 
@@ -47,50 +60,31 @@ console.error = function (d) {
   logger.error(d, {
     logee: 'ruairi'
   });
-}; // console.log = function (d) {
-//   //
-//   logger.log({
-//     level: 'info',
-//     message: d
-//   });
-// };
-// console.warn = function (d) {
-//   //
-//   logger.log({
-//     level: 'warn',
-//     message: d
-//   });
-// };
-// console.info = function (d) {
-//   //
-//   logger.log({
-//     level: 'info',
-//     message: d
-//   });
-// }; // var capcon = require('capture-console');
-// let output = ''
-// capcon.startCapture(process.stderr, function (stderr) {
-//   logger.error(stderr);
-// });
-// var stderr = capcon.captureStderr(function scope(stderr) {
-//   // whatever is done in here has stderr captured,
-//   // the return value is a string containing stderr
-//   console.log
-// });
-// // console.log(`HELLLOOOOOO ${stderr}`);
-// var stdout = capcon.captureStdout(function scope() {
-//   // whatever is done in here has stdout captured,
-//   // the return value is a string containing stdout
-// });
-// var stdio = capcon.captureStdio(function scope() {
-//   // whatever is done in here has both stdout and stderr captured,
-//   // the return value is an object with 'stderr' and 'stdout' keys
-// });
-// console.log('alone or in pairs,');
-// console.warn('and over your neighbors dog?');
-// console.info('Whats great for a snack,');
-// console.error('And fits on your back?');
-// console.error('Its log, log, log');
+};
+
+console.log = function (d) {
+  //
+  logger.log({
+    level: 'info',
+    message: d
+  });
+};
+
+console.warn = function (d) {
+  //
+  logger.log({
+    level: 'warn',
+    message: d
+  });
+};
+
+console.info = function (d) {
+  //
+  logger.log({
+    level: 'info',
+    message: d
+  });
+}; // var capcon = require('capture-console');
 
 
 const bootstrapTime = performance.now();
@@ -371,13 +365,13 @@ class BenchMeta {
     const json = JSON.stringify(data, null, 2);
 
     if (!BENCHMARK_REPORTING_URL) {
-      reportInfo(`Gathered data: ` + json);
+      // reportInfo(`Gathered data: ` + json);
       reportInfo(`BENCHMARK_REPORTING_URL not set, not submitting data`);
       this.flushed = true;
       return this.flushing = Promise.resolve();
-    }
+    } // reportInfo(`Gathered data: ` + json);
 
-    reportInfo(`Gathered data: ` + json);
+
     reportInfo(`Flushing benchmark data to remote server...`);
     let lastStatus = 0;
     this.flushing = nodeFetch(`${BENCHMARK_REPORTING_URL}`, {
@@ -421,6 +415,7 @@ process.on(`exit`, () => {
   if (benchMeta && !benchMeta.flushed && BENCHMARK_REPORTING_URL) {
     // This is probably already a non-zero exit as otherwise node should wait for the last promise to complete
     reportError(`gatsby-plugin-benchmark-reporting error`, new Error(`This is process.exit(); Benchmark plugin has not completely flushed yet`));
+    process.stdout.write = originalStdoutWrite;
     process.exit(1);
   }
 });

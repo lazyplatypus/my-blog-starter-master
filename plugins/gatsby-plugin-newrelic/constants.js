@@ -1,5 +1,5 @@
 module.exports = {
-  NR_KEY: 'NRII-vPNLUI4u_oDX55BKoYyzX073NtHbFW0_',
-  NR_LICENCE: '1ccf67cff6cb5bf6b2aa87fb621f50c6FFFFNRAL',
-  SITE_NAME: 'gatsby-site'
+  NR_KEY: process.env.NEW_RELIC_INSERT_KEY,
+  NR_LICENCE: process.env.NEW_RELIC_LICENSE_KEY,
+  SITE_NAME: 'my-blog-master'
 }
