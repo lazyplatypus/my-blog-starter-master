@@ -1,4 +1,5 @@
 'use strict';
+var nr = require('./node_modules/newrelic')
 
 const _interopRequireDefault = require('@babel/runtime/helpers/interopRequireDefault');
 
@@ -64,25 +65,25 @@ const _processQueue = async () => {
     console.log(logger.queue[0]);
     const formattedQueue = logger.queue.map((trace) => {
       const formatTrace = JSON.parse(trace)
-      if (formatTrace.annotations[0].endpoint) {
-        formatTrace.localEndpoint = {}
-        formatTrace.localEndpoint.serviceName = formatTrace.annotations[0].endpoint.serviceName
-        formatTrace.gatsbySite = constants ? constants.SITE_NAME : 'gatsby-site'
-        if (formatTrace.binaryAnnotations) {
-          formatTrace.tags = {}
-          for (let anno of formatTrace.binaryAnnotations) {
-            formatTrace.tags[anno.key] = anno.value
-          }
-          delete formatTrace['binaryAnnotations']
-        }
+      // formatTrace.gatsbySite = constants ? constants.SITE_NAME : 'gatsby-site'
+
+      formatTrace.localEndpoint = {}
+      formatTrace.localEndpoint.serviceName = constants.SITE_NAME
+      formatTrace.tags = {}
+      if (formatTrace.annotations) {
         delete formatTrace['annotations']
       }
-      
+      if (formatTrace.binaryAnnotations) {
+        for (let anno of formatTrace.binaryAnnotations) {
+          formatTrace.tags[anno.key] = anno.value
+        }
+        delete formatTrace['binaryAnnotations']
+      }
       return JSON.stringify(formatTrace)
     })
-    // console.log(typeof logger.queue[0])
-    
+
     const postBody = `[${formattedQueue.join(',')}]`
+    
     try {
       const response = await (0, _nodeFetch.default)(logger.endpoint, {
         method: `POST`,

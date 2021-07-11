@@ -5,16 +5,14 @@ require('newrelic');
 const constants = require('./constants');
 
 const newrelicFormatter = require('@newrelic/winston-enricher');
-
 const NewrelicWinston = require('newrelic-winston');
-
 const NewrelicLogs = require('winston-to-newrelic-logs');
 
 const winston = require('winston');
 
 const logger = winston.createLogger({
   transports: [new NewrelicLogs({
-    licenseKey: constants.NR_LICENCE,
+    licenseKey: constants.NR_LICENSE,
     apiUrl: 'https://log-api.newrelic.com'
   }), new NewrelicWinston()],
   format: winston.format.combine(winston.format.label({
@@ -25,7 +23,8 @@ const originalStdoutWrite = process.stdout.write.bind(process.stdout);
 const REPLACE_SUBSTRINGS = ['[34m', '[39m', '[2K[1A[2K[G', '[32m'];
 
 process.stdout.write = (chunk, encoding, callback) => {
-  if (typeof chunk === 'string') {
+  if (typeof chunk === 'string' && chunk !== '') {
+    // REPLACE_SUBSTRINGS.map(sub => chunk.replaceAll(sub, ''));
     logger.log({
       level: 'info',
       message: chunk
@@ -53,38 +52,33 @@ const {
   execSync
 } = require(`child_process`);
 
-const fs = require(`fs`);
-
-console.error = function (d) {
-  //
-  logger.error(d, {
-    logee: 'ruairi'
-  });
-};
-
-console.log = function (d) {
-  //
-  logger.log({
-    level: 'info',
-    message: d
-  });
-};
-
-console.warn = function (d) {
-  //
-  logger.log({
-    level: 'warn',
-    message: d
-  });
-};
-
-console.info = function (d) {
-  //
-  logger.log({
-    level: 'info',
-    message: d
-  });
-}; // var capcon = require('capture-console');
+const fs = require(`fs`); // console.error = function (d) {
+//   //
+//   logger.error(d, {
+//     logee: 'ruairi'
+//   });
+// };
+// console.log = function (d) {
+//   //
+//   logger.log({
+//     level: 'info',
+//     message: d
+//   });
+// };
+// console.warn = function (d) {
+//   //
+//   logger.log({
+//     level: 'warn',
+//     message: d
+//   });
+// };
+// console.info = function (d) {
+//   //
+//   logger.log({
+//     level: 'info',
+//     message: d
+//   });
+// }; // var capcon = require('capture-console');
 
 
 const bootstrapTime = performance.now();
