@@ -22,15 +22,28 @@ const logger = winston.createLogger({
   }), newrelicFormatter())
 });
 const originalStdoutWrite = process.stdout.write.bind(process.stdout);
+const UNWANTED_LOGS = ['[2K[1A[2K[G', '', '\n']
 const REPLACE_SUBSTRINGS = ['[34m', '[39m', '[2K[1A[2K[G', '[32m'];
 
 process.stdout.write = (chunk, encoding, callback) => {
-  if (typeof chunk === 'string' && chunk !== '') {
-    // REPLACE_SUBSTRINGS.map(sub => chunk.replaceAll(sub, ''));
-    logger.log({
-      level: 'info',
-      message: chunk
-    });
+  if (typeof chunk === 'string' && !UNWANTED_LOGS.includes(chunk)) {
+    try {
+      REPLACE_SUBSTRINGS.forEach(sub => {
+        chunk.replace(sub, "")
+      });
+    } catch(e) {
+      console.log(e)
+    }
+    
+    try {
+      logger.log({
+        level: 'info',
+        message: chunk
+      });
+    } catch (e) {
+      console.log("YEEEEP")
+    }
+
   }
 
   return originalStdoutWrite(chunk, encoding, callback);
