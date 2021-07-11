@@ -5,7 +5,9 @@ require('newrelic');
 const constants = require('./constants');
 
 const newrelicFormatter = require('@newrelic/winston-enricher');
+
 const NewrelicWinston = require('newrelic-winston');
+
 const NewrelicLogs = require('winston-to-newrelic-logs');
 
 const winston = require('winston');
