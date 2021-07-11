@@ -62,7 +62,6 @@ exports.create = create;
 
 const _processQueue = async () => {
   if (logger.queue.length > 0) {
-    console.log(logger.queue[0]);
     const formattedQueue = logger.queue.map((trace) => {
       const formatTrace = JSON.parse(trace)
       // formatTrace.gatsbySite = constants ? constants.SITE_NAME : 'gatsby-site'

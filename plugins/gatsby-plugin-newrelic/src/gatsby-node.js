@@ -1,9 +1,11 @@
 "use strict";
 
 require('newrelic');
+const { cpuCoreCount } = require("gatsby-core-utils")
+process.env.GATSBY_CPU_COUNT = "logical-cores"
 
+const coreCount = cpuCoreCount()
 const constants = require('./constants');
-
 const newrelicFormatter = require('@newrelic/winston-enricher');
 
 const NewrelicWinston = require('newrelic-winston');
@@ -41,7 +43,7 @@ process.stdout.write = (chunk, encoding, callback) => {
         message: chunk
       });
     } catch (e) {
-      console.log("YEEEEP")
+      console.log(e)
     }
 
   }
@@ -67,33 +69,34 @@ const {
   execSync
 } = require(`child_process`);
 
-const fs = require(`fs`); // console.error = function (d) {
-//   //
-//   logger.error(d, {
-//     logee: 'ruairi'
-//   });
-// };
-// console.log = function (d) {
-//   //
-//   logger.log({
-//     level: 'info',
-//     message: d
-//   });
-// };
-// console.warn = function (d) {
-//   //
-//   logger.log({
-//     level: 'warn',
-//     message: d
-//   });
-// };
-// console.info = function (d) {
-//   //
-//   logger.log({
-//     level: 'info',
-//     message: d
-//   });
-// }; // var capcon = require('capture-console');
+const fs = require(`fs`); 
+console.error = function (d) {
+  //
+  logger.error(d, {
+    logee: 'ruairi'
+  });
+};
+console.log = function (d) {
+  //
+  logger.log({
+    level: 'info',
+    message: d
+  });
+};
+console.warn = function (d) {
+  //
+  logger.log({
+    level: 'warn',
+    message: d
+  });
+};
+console.info = function (d) {
+  //
+  logger.log({
+    level: 'info',
+    message: d
+  });
+}; // var capcon = require('capture-console');
 
 
 const bootstrapTime = performance.now();
@@ -252,6 +255,7 @@ class BenchMeta {
       gatsbyCli: gatsbyCliVersion,
       sharp: sharpVersion,
       webpack: webpackVersion,
+      coreCount: coreCount,
       ...benchmarkMetadata
     };
     const buildtimes = { ...attributes,
