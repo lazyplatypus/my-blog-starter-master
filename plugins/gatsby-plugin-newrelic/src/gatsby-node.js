@@ -1,9 +1,11 @@
 "use strict";
 
 require('newrelic');
+const { cpuCoreCount } = require("gatsby-core-utils")
+process.env.GATSBY_CPU_COUNT = "logical-cores"
 
+const coreCount = cpuCoreCount()
 const constants = require('./constants');
-
 const newrelicFormatter = require('@newrelic/winston-enricher');
 
 const NewrelicWinston = require('newrelic-winston');
@@ -14,7 +16,7 @@ const winston = require('winston');
 
 const logger = winston.createLogger({
   transports: [new NewrelicLogs({
-    licenseKey: constants.NR_KEY,
+    licenseKey: constants.NR_LICENSE,
     apiUrl: 'https://log-api.newrelic.com'
   }), new NewrelicWinston()],
   format: winston.format.combine(winston.format.label({
@@ -22,14 +24,28 @@ const logger = winston.createLogger({
   }), newrelicFormatter())
 });
 const originalStdoutWrite = process.stdout.write.bind(process.stdout);
+const UNWANTED_LOGS = ['[2K[1A[2K[G', '', '\n']
 const REPLACE_SUBSTRINGS = ['[34m', '[39m', '[2K[1A[2K[G', '[32m'];
 
 process.stdout.write = (chunk, encoding, callback) => {
-  if (typeof chunk === 'string') {
-    logger.log({
-      level: 'info',
-      message: chunk
-    });
+  if (typeof chunk === 'string' && !UNWANTED_LOGS.includes(chunk)) {
+    try {
+      REPLACE_SUBSTRINGS.forEach(sub => {
+        chunk.replace(sub, "")
+      });
+    } catch(e) {
+      console.log(e)
+    }
+    
+    try {
+      logger.log({
+        level: 'info',
+        message: chunk
+      });
+    } catch (e) {
+      console.log(e)
+    }
+
   }
 
   return originalStdoutWrite(chunk, encoding, callback);
@@ -53,15 +69,13 @@ const {
   execSync
 } = require(`child_process`);
 
-const fs = require(`fs`);
-
+const fs = require(`fs`); 
 console.error = function (d) {
   //
   logger.error(d, {
     logee: 'ruairi'
   });
 };
-
 console.log = function (d) {
   //
   logger.log({
@@ -69,7 +83,6 @@ console.log = function (d) {
     message: d
   });
 };
-
 console.warn = function (d) {
   //
   logger.log({
@@ -77,7 +90,6 @@ console.warn = function (d) {
     message: d
   });
 };
-
 console.info = function (d) {
   //
   logger.log({
@@ -243,6 +255,7 @@ class BenchMeta {
       gatsbyCli: gatsbyCliVersion,
       sharp: sharpVersion,
       webpack: webpackVersion,
+      coreCount: coreCount,
       ...benchmarkMetadata
     };
     const buildtimes = { ...attributes,
@@ -416,7 +429,6 @@ process.on(`exit`, () => {
     // This is probably already a non-zero exit as otherwise node should wait for the last promise to complete
     reportError(`gatsby-plugin-benchmark-reporting error`, new Error(`This is process.exit(); Benchmark plugin has not completely flushed yet`));
     process.stdout.write = originalStdoutWrite;
-
     process.exit(1);
   }
 });

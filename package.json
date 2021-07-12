@@ -47,7 +47,7 @@
     "url": "git+https://github.com/gatsbyjs/gatsby-starter-blog.git"
   },
   "scripts": {
-    "build": "gatsby build --open-tracing-config-file plugins/gatsby-plugin-newrelic/zipkin-local.js --graphql-tracing",
+    "build": "gatsby build --json --no-color --open-tracing-config-file plugins/gatsby-plugin-newrelic/zipkin-local.js --graphql-tracing",
     "develop": "gatsby develop",
     "format": "prettier --write \"**/*.{js,jsx,ts,tsx,json,md}\"",
     "start": "npm run develop",
